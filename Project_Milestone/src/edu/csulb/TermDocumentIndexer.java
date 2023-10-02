@@ -84,7 +84,7 @@ public class TermDocumentIndexer {
 
             // Iterate through the tokens in the document 
             for (String token : tokenStream.getTokens()) {
-                //processing them using a BasicTokenProcessor
+                //processing them using a derived TokenProcessor 
                 List<String> processingToken = processor.processToken(token);
                 //adding them to the HashSet vocabulary.
                 vocabulary.addAll(processingToken);
@@ -94,7 +94,7 @@ public class TermDocumentIndexer {
         // Constuct a inverted index
         PositionalInvertedIndex index = new PositionalInvertedIndex(vocabulary);
         
-        // THEN, do the loop again! But instead of inserting into the HashSet, add terms to the index with addPosting. //You mean addTerm ?
+        // THEN, do the loop again! But instead of inserting into the HashSet, add terms to the index with addTerm
         for (int documentId = 0; documentId < corpus.getCorpusSize(); documentId++) {
             Document d = corpus.getDocument(documentId);
             int position = 0; // Initialization of position to 0 to get back the position of term in the actual document.

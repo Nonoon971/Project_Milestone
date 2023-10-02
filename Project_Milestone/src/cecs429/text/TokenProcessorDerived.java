@@ -43,6 +43,9 @@ public class TokenProcessorDerived implements TokenProcessor {
     public String normalizeType(String type) {
         try {
             Class stemClass; 
+            
+            //PTET FAIRE UN SWITCH POUR GERER DIFFERENTE LANG SI USER CHERCHE EN ANGLAIS ET TT
+            
             stemClass = Class.forName("org.tartarus.snowball.ext." + "english" + "Stemmer");
             SnowballStemmer stemmer = (SnowballStemmer) stemClass.newInstance();
             stemmer.setCurrent(type);
