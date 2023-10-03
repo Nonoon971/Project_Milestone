@@ -3,14 +3,12 @@ package edu.csulb;
 import cecs429.documents.DirectoryCorpus;
 import cecs429.documents.Document;
 import cecs429.documents.DocumentCorpus;
-import cecs429.documents.JsonFileDocument;
 import cecs429.indexing.*;
 import cecs429.text.BasicTokenProcessor;
 import cecs429.text.EnglishTokenStream;
 import cecs429.text.TokenProcessorDerived;
 
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
@@ -38,9 +36,6 @@ public class TermDocumentIndexer {
         //Initialisation of user's query
         String userQuery = "";
         
-        //Counter of number document found
-        
-
         //The user is asked for a term to search.
         do {
             System.out.println("\nType 'quit' if you want stop the program");
@@ -58,8 +53,9 @@ public class TermDocumentIndexer {
                     List<Posting> postings = index.getPostingsWithPositions(userQuery.toLowerCase());
                     if (!postings.isEmpty()) {
                         for (Posting p : postings) {
-                            System.out.print(corpus.getDocument(p.getDocumentId()).getTitle()+ ", ");
+                            System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + ", ");
                             System.out.println(p.getPositions());
+                            //Counter of number document found
                             numberDoc += 1;
                         }
                         System.out.println("Number of documents found : " + numberDoc);
@@ -93,7 +89,7 @@ public class TermDocumentIndexer {
 
         // Constuct a inverted index
         PositionalInvertedIndex index = new PositionalInvertedIndex(vocabulary);
-        
+
         // THEN, do the loop again! But instead of inserting into the HashSet, add terms to the index with addTerm
         for (int documentId = 0; documentId < corpus.getCorpusSize(); documentId++) {
             Document d = corpus.getDocument(documentId);
@@ -105,10 +101,9 @@ public class TermDocumentIndexer {
                 for (String processedToken : processor.processToken(token)) {
                     // But instead of adding to the HashSet Vocabulary,
                     // adding the term to the index for the current document
-                    index.addTerm(processedToken, documentId,position);
-                    position++; //increment position for the next term
+                    index.addTerm(processedToken, documentId, position);                    
                 }
-                
+                position++; //increment position for the next term
             }
         }
         return index;

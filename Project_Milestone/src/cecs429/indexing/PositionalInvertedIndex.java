@@ -9,7 +9,6 @@ import java.util.*;
 public class PositionalInvertedIndex  implements Index {
 
     private final HashMap<String, List<Posting>> invertedIndex = new HashMap<>();
-    private final HashMap<Integer, Posting> actualPosting = new HashMap<>();
     private final List<String> mVocabulary;
 
     /**
@@ -48,7 +47,6 @@ public class PositionalInvertedIndex  implements Index {
             Posting newPosting = new Posting(documentId);
             newPosting.addPosition(position);
             postings.add(newPosting);
-            actualPosting.put(documentId, newPosting);
 
         } //If the last element of the sorted list of posting is higher or equal 
         //that means the document is already present in the list
@@ -61,14 +59,12 @@ public class PositionalInvertedIndex  implements Index {
                 isDistinctDocumentId = false;
                 
                 //If the document is already present in the list, we add the position in posting position list
-                actualPosting.get(documentId).addPosition(position);
+                lastPosting.addPosition(position);
             }
             if (isDistinctDocumentId) {
                 Posting newPosting = new Posting(documentId);
                 newPosting.addPosition(position);
                 postings.add(newPosting);
-                
-                actualPosting.put(documentId, newPosting);
             }
         }
 
