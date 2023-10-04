@@ -53,7 +53,7 @@ public class TermDocumentIndexer {
                     List<Posting> postings = index.getPostingsWithPositions(userQuery.toLowerCase());
                     if (!postings.isEmpty()) {
                         for (Posting p : postings) {
-                            System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + ", ");
+                            System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + "," + p.getPositionCount());
                             System.out.println(p.getPositions());
                             //Counter of number document found
                             numberDoc += 1;
