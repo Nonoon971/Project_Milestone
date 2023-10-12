@@ -4,6 +4,8 @@ import cecs429.documents.DirectoryCorpus;
 import cecs429.documents.Document;
 import cecs429.documents.DocumentCorpus;
 import cecs429.indexing.*;
+import cecs429.querying.BooleanQueryParser;
+import cecs429.querying.QueryComponent;
 import cecs429.text.BasicTokenProcessor;
 import cecs429.text.EnglishTokenStream;
 import cecs429.text.TokenProcessorDerived;
@@ -33,15 +35,15 @@ public class TermDocumentIndexer {
         // Index the documents of the corpus.
         Index index = indexCorpus(corpus);
 
-        //Initialisation of user's query
+        //Initialization of user's query
         String userQuery = "";
-        
+
         //The user is asked for a term to search.
         do {
             System.out.println("\nType 'quit' if you want stop the program");
             System.out.print("Type the term you want to search: ");
             Scanner in = new Scanner(System.in);
-            userQuery = in.next();
+            userQuery = in.nextLine();
             int numberDoc = 0;
             switch (userQuery) {
 
@@ -50,17 +52,23 @@ public class TermDocumentIndexer {
 
                 default -> {
                     System.out.println("\nThe documents which contains the '" + userQuery + "' term are : ");
-                    List<Posting> postings = index.getPostingsWithPositions(userQuery.toLowerCase());
-                    if (!postings.isEmpty()) {
-                        for (Posting p : postings) {
-                            System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + "," + p.getPositionCount());
-                            System.out.println(p.getPositions());
-                            //Counter of number document found
-                            numberDoc += 1;
+                    QueryComponent queryComponent = BooleanQueryParser.parseQuery(userQuery);
+
+                    if (queryComponent != null) {
+                        List<Posting> postings = queryComponent.getPostings(index);
+                        if (!postings.isEmpty()) {
+                            for (Posting p : postings) {
+                                System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + "," + p.getPositionCount());
+                                System.out.println(p.getPositions());
+                                //Counter of number document found
+                                numberDoc += 1;
+                            }
+                            System.out.println("Number of documents found : " + numberDoc);
+                        } else {
+                            System.out.println("No documents found with the term '" + userQuery + "'.");
                         }
-                        System.out.println("Number of documents found : " + numberDoc);
                     } else {
-                        System.out.println("No documents found with the term '" + userQuery + "'.");
+                        System.out.println("We are sorry, we didn't understand your query.");
                     }
                 }
             }
@@ -101,7 +109,7 @@ public class TermDocumentIndexer {
                 for (String processedToken : processor.processToken(token)) {
                     // But instead of adding to the HashSet Vocabulary,
                     // adding the term to the index for the current document
-                    index.addTerm(processedToken, documentId, position);                    
+                    index.addTerm(processedToken, documentId, position);
                 }
                 position++; //increment position for the next term
             }
