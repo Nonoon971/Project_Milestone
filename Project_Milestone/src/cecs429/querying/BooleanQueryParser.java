@@ -154,6 +154,14 @@ public class BooleanQueryParser {
 			++startIndex;
 		}
 
+		if (subquery.charAt(startIndex) == '-') {
+			Literal literal = BooleanQueryParser.findNextLiteral(subquery, startIndex + 1);
+            return new Literal(
+                new StringBounds(startIndex, literal.bounds.length + 1),
+                new NotQuery(literal.literalComponent)
+            );
+		}
+
 		// Check if this is a phrase literal.
 		if (subquery.charAt(startIndex) == '"') {
 			int nextQuote = subquery.indexOf("\"", startIndex + 1);
