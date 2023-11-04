@@ -17,6 +17,13 @@ public class Posting {
         positionsCount = 0;
         positions = new ArrayList<>();
     }
+    
+    //Second constructor in the case we already have the position
+    public Posting(int documentId, List<Integer> positions) {
+    mDocumentId = documentId;
+    positionsCount = positions.size();
+    this.positions = new ArrayList<>(positions);
+}
 
     public int getDocumentId() {
         return mDocumentId;
