@@ -28,13 +28,14 @@ public class AndQuery implements QueryComponent {
 
         //get the postings of the first query components contained in the AndQuery
         List<Posting> firstQuery = mComponents.get(0).getPostings(index);
-        for (int i = 1; i < mComponents.size(); i++) {
+        for (int i = 1; i < mComponents.size(); i++) 
+        {
             //get the next postings of the next query
             List<Posting> nextQuery = mComponents.get(i).getPostings(index);
 
             //Verfiy if the second component in the merge is a "negative" component 
             if (mComponents.get(i) instanceof NotQuery) {
-                // Remove documents that match the "NOT" query component.
+                // Remove documentID that match the "NOT" query component from the result posting list
                 if (result.isEmpty()) {
                     result = subtractPostings(firstQuery, nextQuery);
                 } else {
@@ -51,6 +52,7 @@ public class AndQuery implements QueryComponent {
         return result;
     }
 
+    //And query intersection book algorithm
     private List<Posting> mergeAndQuery(List<Posting> p1, List<Posting> p2) {
         List<Posting> result = new ArrayList<>();
         int k = 0;
@@ -59,9 +61,8 @@ public class AndQuery implements QueryComponent {
             Posting firstQueryPosting = p1.get(k);
             Posting nextQueryPosting = p2.get(j);
 
-            if (firstQueryPosting.getDocumentId() == nextQueryPosting.getDocumentId()) {
-                //A ADAPTER POUR TRIER LES POSITIONS
-                //DEMANDER AUX PROFS SI C NECESSAIRE PCQ G LA FLEMME DE FAIRE UN TRI A BULLE.
+            if (firstQueryPosting.getDocumentId() == nextQueryPosting.getDocumentId()) 
+            {                
                 result.add(firstQueryPosting);
                 k++;
                 j++;

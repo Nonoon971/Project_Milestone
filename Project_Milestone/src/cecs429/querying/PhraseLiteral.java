@@ -1,16 +1,13 @@
 package cecs429.querying;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import javax.management.Query;
 
 import cecs429.indexing.Index;
 import cecs429.indexing.Posting;
 import static java.lang.Math.abs;
+import java.util.stream.Collectors;
 
 /**
  * Represents a phrase literal consisting of one or more terms that must occur
@@ -30,13 +27,9 @@ public class PhraseLiteral implements QueryComponent {
 
     @Override
     public List<Posting> getPostings(Index index) {
-
-        // TODO: program this method. Retrieve the postings for the individual terms in the phrase,
-        // and positional merge them together.
-        int k = 1;
+        
         // Retrieve postings for the first two components in the phrase
         List<Posting> firstComponent = mComponents.get(0).getPostings(index);
-        //List<Posting> secondComponent = mComponents.get(1).getPostings(index);
 
         List<Posting> result = null;
 
@@ -44,7 +37,7 @@ public class PhraseLiteral implements QueryComponent {
         for (int i = 1; i < mComponents.size(); i++) {
             List<Posting> nextComponentPostings = mComponents.get(i).getPostings(index);
 
-            // Effectuez l'intersection positionnelle avec le composant actuel et mettez à jour le résultat.
+            // Intersect actual posting list with the next one and update the result
             if (result == null) {
                 result = positionalIntersect(firstComponent, nextComponentPostings, i);
             } else {
@@ -56,7 +49,7 @@ public class PhraseLiteral implements QueryComponent {
 
     }
 
-    ////Algorithm from the book
+    //Algorithm from the book
     public static List<Posting> positionalIntersect(List<Posting> p1, List<Posting> p2, int k) {
         List<Posting> result = new ArrayList<>();
 
