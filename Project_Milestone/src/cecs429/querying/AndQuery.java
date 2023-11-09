@@ -25,42 +25,87 @@ public class AndQuery implements QueryComponent {
     @Override
     public List<Posting> getPostings(Index index) {
         List<Posting> result = new ArrayList<>();
-        System.out.println("MERGE EN ACTION");
-        // TODO: program the merge for an AndQuery, by gathering the postings of the composed QueryComponents and
-        // intersecting the resulting postings.
-        
+
         //get the postings of the first query components contained in the AndQuery
         List<Posting> firstQuery = mComponents.get(0).getPostings(index);
-        for(int i=1; i<mComponents.size(); i++)
-        {
+        for (int i = 1; i < mComponents.size(); i++) {
             //get the next postings of the next query
             List<Posting> nextQuery = mComponents.get(i).getPostings(index);
-            
-            //merge them with the algorithm from lecture
-            int k = 0;
-            int j = 0;
-            
-            while(k < firstQuery.size() && j < nextQuery.size())
-            {
-                Posting firstQueryPosting = firstQuery.get(k);
-                Posting nextQueryPosting = nextQuery.get(j);
-                
-                if(firstQueryPosting.getDocumentId() == nextQueryPosting.getDocumentId())
-                {
-                    //A ADAPTER POUR TRIER LES POSITIONS
-                    //DEMANDER AUX PROFS SI C NECESSAIRE PCQ G LA FLEMME DE FAIRE UN TRI A BULLE.
-                    result.add(firstQueryPosting);
-                    k++;
-                    j++;
+
+            //Verfiy if the second component in the merge is a "negative" component 
+            if (mComponents.get(i) instanceof NotQuery) {
+                // Remove documents that match the "NOT" query component.
+                if (result.isEmpty()) {
+                    result = subtractPostings(firstQuery, nextQuery);
+                } else {
+                    result = subtractPostings(result, nextQuery);
                 }
-                else if(firstQueryPosting.getDocumentId() > nextQueryPosting.getDocumentId())
-                    j++;
-                else if(firstQueryPosting.getDocumentId() < nextQueryPosting.getDocumentId())
-                    k++;                  
+            } else {
+                if (result.isEmpty()) {
+                    result = mergeAndQuery(firstQuery, nextQuery);
+                } else {
+                    result = mergeAndQuery(result, nextQuery);
+                }
             }
-            
         }
         return result;
+    }
+
+    private List<Posting> mergeAndQuery(List<Posting> p1, List<Posting> p2) {
+        List<Posting> result = new ArrayList<>();
+        int k = 0;
+        int j = 0;
+        while (k < p1.size() && j < p2.size()) {
+            Posting firstQueryPosting = p1.get(k);
+            Posting nextQueryPosting = p2.get(j);
+
+            if (firstQueryPosting.getDocumentId() == nextQueryPosting.getDocumentId()) {
+                //A ADAPTER POUR TRIER LES POSITIONS
+                //DEMANDER AUX PROFS SI C NECESSAIRE PCQ G LA FLEMME DE FAIRE UN TRI A BULLE.
+                result.add(firstQueryPosting);
+                k++;
+                j++;
+            } else if (firstQueryPosting.getDocumentId() > nextQueryPosting.getDocumentId()) {
+                j++;
+            } else if (firstQueryPosting.getDocumentId() < nextQueryPosting.getDocumentId()) {
+                k++;
+            }
+        }
+        return result;
+    }
+
+    // Skip postings of a "NOT" query component from a result set.
+    private List<Posting> subtractPostings(List<Posting> result, List<Posting> notQuery) {
+        List<Posting> newResult = new ArrayList<>();
+        int i = 0;
+        int j = 0;
+
+        while (i < result.size() && j < notQuery.size()) {
+            Posting resultPosting = result.get(i);
+            Posting notQueryPosting = notQuery.get(j);
+
+            // If we have the same document ID, we skip this document and not consider it.
+            if (resultPosting.getDocumentId() == notQueryPosting.getDocumentId()) {
+                //Move forward in the posting list of result and the query
+                i++;
+                j++;
+            } else if (resultPosting.getDocumentId() < notQueryPosting.getDocumentId()) {
+                // If the result docID is smaller than the notQuery docID, we include it in new result.
+                newResult.add(resultPosting);
+                i++; // Move the result pointer.
+            } else {
+                // If the notQuery has a smaller docID, we don't consider it and move forward in his the posting list.
+                j++;
+            }
+        }
+
+        //We add the rest of the element of result to not loose the initial docID
+        while (i < result.size()) {
+            newResult.add(result.get(i));
+            i++;
+        }
+
+        return newResult;
     }
 
     @Override
