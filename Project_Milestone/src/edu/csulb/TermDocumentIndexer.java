@@ -114,6 +114,35 @@ public class TermDocumentIndexer {
                 position++; //increment position for the next term
             }
         }
+        
+        // Compute document lengths and write to docWeights.bin
+        double[] documentLengths = new double[corpus.getCorpusSize()];
+
+        for (String term : index.getVocabulary()) {
+            List<Posting> postingsTerm = index.getPostings(term);
+
+            // Calculate L_d for each document that contains the term
+            for (Posting posting : postingsTerm) {
+                int documentId = posting.getDocumentId();
+                int tf_td = posting.getPositionCount();
+
+                // Calculate (tf_{d,t})² and add it to the sum
+                double termFrequencySquared = Math.pow(tf_td, 2);
+                // Update the document length for the current document
+                documentLengths[documentId] += termFrequencySquared;
+            }
+        }
+
+        // Now, compute the square root of the sum to get the Euclidean length
+        try (RandomAccessFile docWeightsFile = new RandomAccessFile("docWeights.bin", "rw")) {
+            for (int documentId = 0; documentId < documentLengths.length; documentId++) {
+                double documentWeight = Math.sqrt(documentLengths[documentId]);
+                // Write the document weight to the docWeights.bin file
+                docWeightsFile.writeDouble(documentWeight);
+            }
+        } catch (IOException e) {
+        }
+
         return index;
     }
 }
