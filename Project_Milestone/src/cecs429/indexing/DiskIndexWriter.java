@@ -17,10 +17,10 @@ public class DiskIndexWriter {
 
     public void writeIndex(PositionalInvertedIndex index, String pathFiles) throws FileNotFoundException, IOException, SQLException {
         // use the RandomAccessFile class to open the file
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + pathFiles + File.separator + "vocab.db"); Statement statement = connection.createStatement()) {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + pathFiles + "/vocab.db"); Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS vocabulary (term TEXT PRIMARY KEY, byte_position INTEGER)");
 
-            try (RandomAccessFile postingsFile = new RandomAccessFile("postings.bin", "rw"); 
+            try (RandomAccessFile postingsFile = new RandomAccessFile(pathFiles + "/postings.bin", "rw"); 
                  //In order to get back the position where postings begin in the file
                  FileChannel postingsChan = postingsFile.getChannel()){
 

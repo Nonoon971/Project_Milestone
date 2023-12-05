@@ -33,7 +33,7 @@ public class TermDocumentIndexer {
         DocumentCorpus corpus = DirectoryCorpus.loadDocumentDirectory(path.toAbsolutePath());
 
         // Index the documents of the corpus.
-        Index index = indexCorpus(corpus);
+        Index index = indexCorpus(corpus, directoryPath);
 
         //Initialization of user's query
         String userQuery = "";
@@ -75,7 +75,7 @@ public class TermDocumentIndexer {
         } while (!userQuery.equals("quit"));
     }
 
-    private static Index indexCorpus(DocumentCorpus corpus) {
+    private static Index indexCorpus(DocumentCorpus corpus, String directoryPath) {
         HashSet<String> vocabulary = new HashSet<>();
         TokenProcessorDerived processor = new TokenProcessorDerived();
 
@@ -134,7 +134,7 @@ public class TermDocumentIndexer {
         }
 
         // Now, compute the square root of the sum to get the Euclidean length
-        try (RandomAccessFile docWeightsFile = new RandomAccessFile("docWeights.bin", "rw")) {
+        try (RandomAccessFile docWeightsFile = new RandomAccessFile(directoryPath + "/docWeights.bin", "rw")) {
             for (int documentId = 0; documentId < documentLengths.length; documentId++) {
                 double documentWeight = Math.sqrt(documentLengths[documentId]);
                 // Write the document weight to the docWeights.bin file
