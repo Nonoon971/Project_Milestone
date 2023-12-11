@@ -14,68 +14,75 @@ import java.io.*;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TermDocumentIndexer {
 
     public static void main(String[] args) {
-        //Ask for a directory to load documents from when it begins
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("What is the path of the corpus ? : ");
-        String directoryPath = scanner.nextLine();
-
-        // Cast the string in path object
-        Path path = Paths.get(directoryPath);
-
-        // Create a DocumentCorpus to load .txt and .json documents from the project directory.
-        DocumentCorpus corpus = DirectoryCorpus.loadDocumentDirectory(path.toAbsolutePath());
-
-        // Index the documents of the corpus.
-        Index index = indexCorpus(corpus, directoryPath);
-
-        //Initialization of user's query
-        String userQuery = "";
-
-        //The user is asked for a term to search.
-        do {
-            System.out.println("\nType 'quit' if you want stop the program");
-            System.out.print("Type the term you want to search: ");
-            Scanner in = new Scanner(System.in);
-            userQuery = in.nextLine();
-            int numberDoc = 0;
-            switch (userQuery) {
-
-                case "quit" ->
-                    System.out.println("See you!");
-
-                default -> {
-                    System.out.println("\nThe documents which contains the '" + userQuery + "' term are : ");
-                    QueryComponent queryComponent = BooleanQueryParser.parseQuery(userQuery);
-
-                    if (queryComponent != null) {
-                        List<Posting> postings = queryComponent.getPostings(index);
-                        if (!postings.isEmpty()) {
-                            for (Posting p : postings) {
-                                System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + "," + p.getPositionCount());
-                                System.out.println(p.getPositions());
-                                //Counter of number document found
-                                numberDoc += 1;
+        try {
+            //Ask for a directory to load documents from when it begins
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("What is the path of the corpus ? : ");
+            String directoryPath = scanner.nextLine();
+            
+            // Cast the string in path object
+            Path path = Paths.get(directoryPath);
+            
+            // Create a DocumentCorpus to load .txt and .json documents from the project directory.
+            DocumentCorpus corpus = DirectoryCorpus.loadDocumentDirectory(path.toAbsolutePath());
+            
+            // Index the documents of the corpus.
+            Index index = indexCorpus(corpus, directoryPath);
+            
+            //Initialization of user's query
+            String userQuery = "";
+            
+            //The user is asked for a term to search.
+            do {
+                System.out.println("\nType 'quit' if you want stop the program");
+                System.out.print("Type the term you want to search: ");
+                Scanner in = new Scanner(System.in);
+                userQuery = in.nextLine();
+                int numberDoc = 0;
+                switch (userQuery) {
+                    
+                    case "quit" ->
+                        System.out.println("See you!");
+                        
+                    default -> {
+                        System.out.println("\nThe documents which contains the '" + userQuery + "' term are : ");
+                        QueryComponent queryComponent = BooleanQueryParser.parseQuery(userQuery);
+                        
+                        if (queryComponent != null) {
+                            List<Posting> postings = queryComponent.getPostings(index);
+                            if (!postings.isEmpty()) {
+                                for (Posting p : postings) {
+                                    System.out.print(corpus.getDocument(p.getDocumentId()).getTitle() + "," + p.getPositionCount());
+                                    System.out.println(p.getPositions());
+                                    //Counter of number document found
+                                    numberDoc += 1;
+                                }
+                                System.out.println("Number of documents found : " + numberDoc);
+                            } else {
+                                System.out.println("No documents found with the term '" + userQuery + "'.");
                             }
-                            System.out.println("Number of documents found : " + numberDoc);
                         } else {
-                            System.out.println("No documents found with the term '" + userQuery + "'.");
+                            System.out.println("We are sorry, we didn't understand your query.");
                         }
-                    } else {
-                        System.out.println("We are sorry, we didn't understand your query.");
                     }
                 }
-            }
-        } while (!userQuery.equals("quit"));
+            } while (!userQuery.equals("quit"));
+        } catch (IOException | SQLException ex) {
+            Logger.getLogger(TermDocumentIndexer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
-    private static Index indexCorpus(DocumentCorpus corpus, String directoryPath) {
+    private static Index indexCorpus(DocumentCorpus corpus, String directoryPath) throws IOException, FileNotFoundException, SQLException {
         HashSet<String> vocabulary = new HashSet<>();
         TokenProcessorDerived processor = new TokenProcessorDerived();
 
@@ -97,6 +104,7 @@ public class TermDocumentIndexer {
 
         // Constuct a inverted index
         PositionalInvertedIndex index = new PositionalInvertedIndex(vocabulary);
+        DiskIndexWriter writerIndex = new DiskIndexWriter();
 
         // THEN, do the loop again! But instead of inserting into the HashSet, add terms to the index with addTerm
         for (int documentId = 0; documentId < corpus.getCorpusSize(); documentId++) {
@@ -115,6 +123,10 @@ public class TermDocumentIndexer {
             }
         }
         
+        writerIndex.writeIndex(index, directoryPath);
+        
+        DiskPositionalIndex diskIndex = new DiskPositionalIndex(directoryPath);
+
         // Compute document lengths and write to docWeights.bin
         double[] documentLengths = new double[corpus.getCorpusSize()];
 
@@ -143,6 +155,6 @@ public class TermDocumentIndexer {
         } catch (IOException e) {
         }
 
-        return index;
+        return diskIndex;
     }
 }
